@@ -48,7 +48,7 @@ pub fn bargraph(mut percent: f64) -> String {
 
 pub fn is_virtual(fs: &str) -> bool {
     match fs {
-        "devtmpfs" | "portal" | "tmpfs" => true,
+        "dev" | "devtmpfs" | "efivarfs" | "portal" | "run" | "tmpfs" => true,
         _ => fs.starts_with("/dev/loop") || fs.starts_with("systemd-"),
     }
 }

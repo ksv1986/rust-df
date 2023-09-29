@@ -59,7 +59,7 @@ fn main() {
                     }
                 };
                 let fsid = statvfs.filesystem_id();
-                if let Some(_) = stats.iter().find(|s| s.fsid == fsid) {
+                if stats.iter().any(|s| s.fsid == fsid) {
                     continue;
                 }
                 let size = statvfs.blocks() * statvfs.block_size();

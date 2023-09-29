@@ -14,12 +14,12 @@ pub fn iec(n: u64) -> String {
 // we use this fact and replace -- with #
 // split on - and then switch # back to -
 pub fn shorten_lv(path: &str) -> String {
-    const MARK: &'static str = "#";
+    const MARK: &str = "#";
 
     if path.starts_with("/dev/mapper/") {
         if let Some(lv) = path.split('/').nth(3) {
             let lv = lv.replace("--", MARK);
-            let lv_vg: Vec<String> = lv.split("-").map(|x| x.replace(MARK, "-")).collect();
+            let lv_vg: Vec<String> = lv.split('-').map(|x| x.replace(MARK, "-")).collect();
             return format!("/dev/{}/{}", lv_vg[0], lv_vg[1]);
         }
     }

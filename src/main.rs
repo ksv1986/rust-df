@@ -58,17 +58,21 @@ fn main() {
                         continue;
                     }
                 };
-                let fsid = statvfs.filesystem_id();
-                if stats.iter().any(|s| s.fsid == fsid) {
-                    continue;
-                }
                 let size = statvfs.blocks() * statvfs.block_size();
-                let avail = statvfs.blocks_available() * statvfs.block_size();
                 if size == 0 && !matches.is_present("all") {
                     continue;
                 }
-                let s = Stats::new(fields[FS_SPEC], size, avail, fields[FS_FILE], fsid);
-
+                let avail = statvfs.blocks_available() * statvfs.block_size();
+                let s = Stats::new(
+                    fields[FS_SPEC],
+                    size,
+                    avail,
+                    fields[FS_FILE],
+                    statvfs.filesystem_id(),
+                );
+                if stats.iter().any(|o| o.is_same(&s)) {
+                    continue;
+                }
                 max_width = cmp::max(max_width, s.filesystem.len());
                 stats.push(s);
             }

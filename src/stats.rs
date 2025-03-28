@@ -34,6 +34,10 @@ impl Stats {
     pub fn is_network(&self) -> bool {
         self.score == FS_NET
     }
+
+    pub fn is_same(&self, other: &Stats) -> bool {
+        self.fsid == other.fsid && self.size == other.size
+    }
 }
 
 const FS_DEV: usize = 0;

@@ -1,5 +1,7 @@
 use colored::*;
 
+use std::fs::canonicalize;
+
 // http://stackoverflow.com/questions/5194057/better-way-to-convert-file-sizes-in-python
 pub fn iec(n: u64) -> String {
     let units = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
@@ -14,13 +16,11 @@ pub fn iec(n: u64) -> String {
 // we use this fact and replace -- with #
 // split on - and then switch # back to -
 pub fn shorten_lv(path: &str) -> String {
-    const MARK: &str = "#";
-
     if path.starts_with("/dev/mapper/") {
-        if let Some(lv) = path.split('/').nth(3) {
-            let lv = lv.replace("--", MARK);
-            let lv_vg: Vec<String> = lv.split('-').map(|x| x.replace(MARK, "-")).collect();
-            return format!("/dev/{}/{}", lv_vg[0], lv_vg[1]);
+        if let Ok(real) = canonicalize(path) {
+            if let Some(spath) = real.to_str() {
+                return spath.into();
+            }
         }
     }
 
@@ -50,21 +50,5 @@ pub fn is_virtual(fs: &str) -> bool {
     match fs {
         "dev" | "devtmpfs" | "efivarfs" | "portal" | "run" | "tmpfs" => true,
         _ => fs.starts_with("/dev/loop") || fs.starts_with("systemd-"),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::shorten_lv;
-
-    #[test]
-    fn test_shorten_lv() {
-        assert_eq!(shorten_lv("/dev/mapper/vg-lv"), "/dev/vg/lv");
-        assert_eq!(shorten_lv("/dev/mapper/vg-lv--1"), "/dev/vg/lv-1");
-        assert_eq!(shorten_lv("/dev/mapper/vg--one-lv"), "/dev/vg-one/lv");
-        assert_eq!(
-            shorten_lv("/dev/mapper/vg--one-lv--one"),
-            "/dev/vg-one/lv-one"
-        );
     }
 }

@@ -1,11 +1,9 @@
-extern crate clap;
 extern crate colored;
 extern crate nix;
 
 mod stats;
 mod util;
 
-use clap::{Arg, Command};
 use colored::*;
 use nix::sys::statvfs::statvfs;
 use std::cmp;
@@ -19,18 +17,34 @@ use util::{bargraph, iec, is_virtual};
 
 const FS_SPEC: usize = 0;
 const FS_FILE: usize = 1;
+const VERSION: &str = "0.1.0";
+const USAGE: &str = r"Mike Sampson <mike@sda.io>
+
+USAGE:
+    rdf [OPTIONS]
+
+OPTIONS:
+    -a, --all        Display all filesystems
+    -h, --help       Print help information
+    -V, --version    Print version information";
 
 fn main() {
-    let matches = Command::new("rdf")
-        .version("0.1.0")
-        .author("Mike Sampson <mike@sda.io>")
-        .arg(
-            Arg::new("all")
-                .long("all")
-                .short('a')
-                .help("Display all filesystems"),
-        )
-        .get_matches();
+    let show_all = if let Some(arg) = std::env::args().nth(1) {
+        match arg.as_ref() {
+            "-a" | "--all" => true,
+            "-V" | "--version" => {
+                println!("rdf {}", VERSION);
+                process::exit(1);
+            }
+            _ => {
+                println!("rdf {}", VERSION);
+                println!("{}", USAGE);
+                process::exit(1);
+            }
+        }
+    } else {
+        false
+    };
 
     let file = match File::open("/proc/mounts") {
         Ok(f) => f,
@@ -48,7 +62,7 @@ fn main() {
         match line {
             Ok(line) => {
                 let fields: Vec<&str> = line.split_whitespace().collect();
-                if !matches.is_present("all") && is_virtual(fields[FS_SPEC]) {
+                if !show_all && is_virtual(fields[FS_SPEC]) {
                     continue;
                 }
                 let statvfs = match statvfs(fields[FS_FILE]) {
@@ -59,7 +73,7 @@ fn main() {
                     }
                 };
                 let size = statvfs.blocks() * statvfs.block_size();
-                if size == 0 && !matches.is_present("all") {
+                if size == 0 && !show_all {
                     continue;
                 }
                 let avail = statvfs.blocks_available() * statvfs.block_size();
